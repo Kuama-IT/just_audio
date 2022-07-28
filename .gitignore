@@ -20,3 +20,6 @@ Podfile.lock
 # IntelliJ
 .idea
 *.iml
+
+# VS Code
+.vscode
