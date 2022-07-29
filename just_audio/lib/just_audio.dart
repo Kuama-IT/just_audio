@@ -14,6 +14,9 @@ import 'package:path_provider/path_provider.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:uuid/uuid.dart';
 
+export 'package:just_audio_platform_interface/just_audio_platform_interface.dart'
+    show DarwinEqualizerParametersMessage, DarwinEqualizerBandMessage;
+
 const _uuid = Uuid();
 
 JustAudioPlatform? _pluginPlatformCache;
