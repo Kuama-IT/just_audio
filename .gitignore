@@ -23,3 +23,5 @@ Podfile.lock
 
 # VS Code
 .vscode
+
+.DS_Store
