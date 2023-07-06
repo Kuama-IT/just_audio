@@ -22,6 +22,7 @@ export 'package:just_audio_platform_interface/just_audio_platform_interface.dart
         DarwinDistortionMessage,
         DarwinReverbPreset,
         DarwinReverbMessage,
+        DarwinEqualizerBandSetGainResponse,
         DarwinDelayMessage;
 
 const _uuid = Uuid();
@@ -1516,14 +1517,16 @@ class AudioPlayer {
       return platform;
     }
 
+    _platform = setPlatform();
+
     Future<void> initAudioEffects() async {
+      final platform = await _platform;
       for (var audioEffect in _audioPipeline._audioEffects) {
-        await audioEffect._activate();
+        await audioEffect._activate(platform);
         if (checkInterruption()) return;
       }
     }
 
-    _platform = setPlatform();
     if (_active) {
       initAudioEffects().catchError((dynamic e) async {});
     }
@@ -1649,7 +1652,7 @@ class PlaybackEvent {
       );
 
   @override
-  int get hashCode => hashValues(
+  int get hashCode => Object.hash(
         processingState,
         updateTime,
         updatePosition,
@@ -1714,7 +1717,7 @@ class PlayerState {
   String toString() => 'playing=$playing,processingState=$processingState';
 
   @override
-  int get hashCode => hashValues(playing, processingState);
+  int get hashCode => Object.hash(playing, processingState);
 
   @override
   bool operator ==(Object other) =>
@@ -1739,7 +1742,7 @@ class IcyInfo {
   String toString() => 'title=$title,url=$url';
 
   @override
-  int get hashCode => hashValues(title, url);
+  int get hashCode => Object.hash(title, url);
 
   @override
   bool operator ==(Object other) =>
@@ -1808,7 +1811,7 @@ class IcyMetadata {
   IcyMetadata({required this.info, required this.headers});
 
   @override
-  int get hashCode => hashValues(info, headers);
+  int get hashCode => Object.hash(info, headers);
 
   @override
   bool operator ==(Object other) =>
@@ -3688,9 +3691,8 @@ class _IdleAudioPlayer extends AudioPlayerPlatform {
 
   @override
   Future<DarwinEqualizerBandSetGainResponse> darwinEqualizerBandSetGain(
-      DarwinEqualizerBandSetGainRequest request) {
-    throw UnimplementedError(
-        "darwinEqualizerBandSetGain() has not been implemented.");
+      DarwinEqualizerBandSetGainRequest request) async {
+    return DarwinEqualizerBandSetGainResponse();
   }
 }
 
@@ -4180,9 +4182,9 @@ class DarwinEqualizerParameters {
   });
 
   /// Restore platform state after reactivating.
-  Future<void> _restore(AudioPlayerPlatform platform) async {
+  Future<void> _restore() async {
     for (var band in bands) {
-      await band._restore(platform);
+      await band._restore();
     }
   }
 
@@ -4213,8 +4215,8 @@ class Equalizer extends AudioEffect with DarwinAudioEffect, AndroidAudioEffect {
   String get _type => _isAndroid() ? 'AndroidEqualizer' : 'DarwinEqualizer';
 
   @override
-  Future<void> _activate() async {
-    await super._activate();
+  Future<void> _activate(AudioPlayerPlatform platform) async {
+    await super._activate(platform);
     if (_isAndroid()) {
       if (_parametersCompleter.isCompleted) {
         await (await parameters)._restore();
